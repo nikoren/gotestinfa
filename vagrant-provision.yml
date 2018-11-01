@@ -1,0 +1,63 @@
+- name: Provision vagrant
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install epel-release
+      yum:
+        name: epel-release
+        state: latest
+    - name: Istall packages
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - golang
+        - git
+        - vim
+        - htop
+        - python-pip
+    - name: Setup GOPATH
+      lineinfile:
+        path: /home/vagrant/.bashrc
+        line: "{{ item }}"
+      with_items:
+        - "export GOPATH=/vagrant"
+        - "export GOBIN=/vagrant/bin"
+    - name: Setup VIM mode
+      lineinfile:
+        path: /home/vagrant/.inputrc
+        line: "{{ item }}"
+        create: yes
+        owner: 'vagrant'
+        mode: '0440'
+      with_items:
+        - "set editor vi"
+    - name: Create deploy user
+      user:
+        name: deploy
+    - name: Create virtualenv directory
+      file:
+        path: "/data/virtualenv"
+        state: directory
+        recurse: yes
+        owner: deploy
+        group: "deploy"
+        mode: "0700"
+    - name: Install virtualenv 
+      pip:
+        name: virtualenv
+    
+    - name: Set virtualenv permissions
+      file:
+        path: "/data/virtualenv/default"
+        recurse: yes
+        owner: deploy
+        group: "deploy"
+    
+    - name: Create virtualenv
+      pip:
+        name: requests
+        virtualenv: /data/virtualenv/default
+      
+      
+  
